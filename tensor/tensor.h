@@ -160,6 +160,10 @@ public:
         return maximum;
     }
 
+    T mean() const{
+        return sum() / length;
+    }
+
     /** =================================
      *               STATIC
      *  =================================*/
@@ -173,6 +177,9 @@ public:
          }
      }
 
+     /** =================================
+      *               BUILDERS
+      *  =================================*/
 
      static Tensor<T> random(std::shared_ptr<Generator> const& distribution, ShapeType const& size){
         Tensor<T> array;
@@ -194,6 +201,7 @@ public:
         return Tensor<T>::fill(size, 1);
     }
 
+
     static Tensor<T> fill(ShapeType const& size, T const& value){
         Tensor<T> array;
         array.length = Tensor<T>::getLength(size);
@@ -204,6 +212,24 @@ public:
         return array;
     }
 
+    static Tensor<T> arange(ShapeValue count){
+        auto array = Tensor<T>::zeros({count});
+        for(unsigned int i = 0; i < count; ++i){
+            array.data[i] = i;
+        }
+        return array;
+    }
+
+    static Tensor<T> linspace(double begin, double end, unsigned int steps){
+        // initialize empty array
+        auto array = Tensor<T>::zeros({steps});
+        // calculate step size and iterate
+        double stepSize = (end - begin) / (steps - 1);
+        for(unsigned int i = 0; i < steps; ++i){
+            array.data[i] = begin + i * stepSize;
+        }
+        return array;
+    }
 
 
 private:
