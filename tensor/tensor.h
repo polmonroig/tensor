@@ -32,6 +32,7 @@ public:
     }
 
     void reshape(ShapeType const& size){
+        // with a tensor reshape, the length stays the same
         dimensions = size.size();
         shape = size;
     }
@@ -57,6 +58,46 @@ public:
      *               OPERATORS
      *  =================================*/
 
+     Tensor<T> operator+(T const& value){
+
+         auto result = Tensor<T>::zeros(shape);
+         for(unsigned int i = 0; i < length; ++i){
+             result.data[i] = data[i] + value;
+         }
+
+         return result;
+     }
+
+     Tensor<T> operator-(T const& value){
+
+         auto result = Tensor<T>::zeros(shape);
+         for(unsigned int i = 0; i < length; ++i){
+             result.data[i] = data[i] - value;
+         }
+
+         return result;
+     }
+
+     Tensor<T> operator*(T const& value){
+
+         auto result = Tensor<T>::zeros(shape);
+         for(unsigned int i = 0; i < length; ++i){
+             result.data[i] = data[i] * value;
+         }
+
+         return result;
+     }
+
+     Tensor<T> operator/(T const& value){
+
+         auto result = Tensor<T>::zeros(shape);
+         for(unsigned int i = 0; i < length; ++i){
+             result.data[i] = data[i] / value;
+         }
+
+         return result;
+     }
+
      Tensor<T> operator+(Tensor<T> const& other){
          // first of all check that shapes match
          // and throw any exception if necessary
@@ -68,6 +109,24 @@ public:
          // of broadcasting
          for(unsigned int i = 0; i < length; ++i){
              result.data[i] = data[i] + other.data[i];
+         }
+
+         return result;
+     }
+
+
+
+     Tensor<T> operator-(Tensor<T> const& other){
+         // first of all check that shapes match
+         // and throw any exception if necessary
+         Tensor<T>::checkShape(shape, other.shape);
+         // we create an empty tensor of zeros
+         auto result = Tensor<T>::zeros(shape);
+         // for each dimension sum each component
+         // this implementation of sum does not provide any type
+         // of broadcasting
+         for(unsigned int i = 0; i < length; ++i){
+             result.data[i] = data[i] - other.data[i];
          }
 
          return result;
@@ -128,14 +187,26 @@ public:
     }
 
     static Tensor<T> zeros(ShapeType const& size){
+        return Tensor<T>::fill(size, 0);
+    }
+
+    static Tensor<T> ones(ShapeType const& size){
+        return Tensor<T>::fill(size, 1);
+    }
+
+    static Tensor<T> fill(ShapeType const& size, T const& value){
         Tensor<T> array;
         array.length = Tensor<T>::getLength(size);
         // set variables
         array.dimensions = size.size();
-        array.data = std::vector<T>(array.length, 0);
+        array.data = std::vector<T>(array.length, value);
         array.shape = size;
         return array;
     }
+
+
+
+private:
 
 
     static ShapeValue getLength(ShapeType const& size){
@@ -146,13 +217,14 @@ public:
         return count;
     }
 
+    /** =================================
+     *               ATTRIBUTES
+     *  =================================*/
 
-private:
-
-    ShapeValue length;
-    ShapeValue dimensions;
-    ShapeType shape;
-    std::vector<T> data;
+    ShapeValue length; // represents the total number of elements
+    ShapeValue dimensions; // number of dimensions in the shape
+    ShapeType shape; // dimensions on the tensor
+    std::vector<T> data; // contains the data
 
 };
 
