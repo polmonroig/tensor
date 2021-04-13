@@ -7,5 +7,7 @@
 int main(){
     auto t1 = Tensor<double>::linspace(0, 10, 5);
     t1.print();
+    t1 = -t1;
+    t1.print();
 
 }

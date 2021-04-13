@@ -132,6 +132,16 @@ public:
          return result;
      }
 
+     Tensor<T> operator-(){
+         auto array = Tensor<T>::zeros(shape);
+         for(unsigned int i = 0; i < length; ++i){
+             array.data[i] = -data[i];
+         }
+
+         return array;
+     }
+
+
 
     /** =================================
      *               ARITHMETIC
