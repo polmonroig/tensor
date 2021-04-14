@@ -6,11 +6,13 @@
 #include <memory>
 #include <limits>
 #include <stdexcept>
+#include <cmath>
 
 
 #include "../random/random.h"
 
 typedef unsigned int ShapeValue;
+typedef unsigned int IndexType;
 typedef std::vector<ShapeValue> ShapeType;
 
 template<class T>
@@ -31,10 +33,12 @@ public:
         std::cout << std::endl; // last endline
     }
 
-    void reshape(ShapeType const& size){
+    Tensor<T>& reshape(ShapeType const& size){
+        Tensor<T>::checkLenght(length, Tensor<T>::getLength(size));
         // with a tensor reshape, the length stays the same
         dimensions = size.size();
         shape = size;
+        return *this;
     }
 
     void printDimension(unsigned int dim, unsigned int& dataIndex) const{
@@ -60,7 +64,7 @@ public:
 
      Tensor<T> operator+(T const& value){
 
-         auto result = Tensor<T>::zeros(shape);
+         auto result = Tensor<T>::empty(shape);
          for(unsigned int i = 0; i < length; ++i){
              result.data[i] = data[i] + value;
          }
@@ -70,7 +74,7 @@ public:
 
      Tensor<T> operator-(T const& value){
 
-         auto result = Tensor<T>::zeros(shape);
+         auto result = Tensor<T>::empty(shape);
          for(unsigned int i = 0; i < length; ++i){
              result.data[i] = data[i] - value;
          }
@@ -80,7 +84,7 @@ public:
 
      Tensor<T> operator*(T const& value){
 
-         auto result = Tensor<T>::zeros(shape);
+         auto result = Tensor<T>::empty(shape);
          for(unsigned int i = 0; i < length; ++i){
              result.data[i] = data[i] * value;
          }
@@ -90,7 +94,7 @@ public:
 
      Tensor<T> operator/(T const& value){
 
-         auto result = Tensor<T>::zeros(shape);
+         auto result = Tensor<T>::empty(shape);
          for(unsigned int i = 0; i < length; ++i){
              result.data[i] = data[i] / value;
          }
@@ -103,7 +107,7 @@ public:
          // and throw any exception if necessary
          Tensor<T>::checkShape(shape, other.shape);
          // we create an empty tensor of zeros
-         auto result = Tensor<T>::zeros(shape);
+         auto result = Tensor<T>::empty(shape);
          // for each dimension sum each component
          // this implementation of sum does not provide any type
          // of broadcasting
@@ -141,6 +145,39 @@ public:
          return array;
      }
 
+    /** =================================
+    *               ARG-ARITHMETIC
+    *  =================================*/
+
+    Tensor<IndexType> argmin(unsigned int axis){
+        ShapeType size;
+        // reserve space for #dimensions - 1
+        size.reserve(dimensions - 1);
+        // for each dimension exclude selected axis.
+        for(ShapeValue i = 0; i < dimensions; ++i){
+            if(i != axis){
+                size.push_back(shape[i]);
+            }
+        }
+        auto arguments = Tensor<IndexType>::empty(size);
+
+
+        return arguments;
+    }
+
+    IndexType argmin(){
+        IndexType index;
+        T minimum = std::numeric_limits<T>::max();
+        for(IndexType i = 0; i < length; ++i){
+            if(data[i] < minimum){
+                minimum = data[i];
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
 
 
     /** =================================
@@ -174,18 +211,53 @@ public:
         return sum() / length;
     }
 
+    Tensor<T> sin() const{
+        auto array = Tensor<T>::empty(shape);
+        for(unsigned int i = 0; i < length; ++i){
+            array.data[i] = std::sin(data[i]);
+        }
+        return array;
+    }
+
+    Tensor<T> cos() const{
+        auto array = Tensor<T>::empty(shape);
+        for(unsigned int i = 0; i < length; ++i){
+            array.data[i] = std::cos(data[i]);
+        }
+        return array;
+    }
+
+    Tensor<T> tan() const{
+        auto array = Tensor<T>::empty(shape);
+        for(unsigned int i = 0; i < length; ++i){
+            array.data[i] = std::tan(data[i]);
+        }
+        return array;
+    }
+
+    // perfmors log on base e
+    Tensor<T> ln() const{
+        auto array = Tensor<T>::empty(shape);
+        for(unsigned int i = 0; i < length; ++i){
+            array.data[i] = std::log(data[i]);
+        }
+        return array;
+    }
+
+    Tensor<T> pow(double exponent) const{
+        auto array = Tensor<T>::empty(shape);
+        for(unsigned int i = 0; i < length; ++i){
+            array.data[i] = std::pow(data[i], exponent);
+        }
+        return array;
+    }
+
     /** =================================
      *               STATIC
      *  =================================*/
 
 
 
-     static void checkShape(ShapeType const& a, ShapeType const& b){
-         if(a.size() != b.size()) throw std::invalid_argument("Tensor shapes do not match");
-         for(unsigned int i = 0; i < a.size(); ++i){
-             if(a[i] != b[i]) throw std::invalid_argument("Tensor shapes do not match");
-         }
-     }
 
      /** =================================
       *               BUILDERS
@@ -222,8 +294,18 @@ public:
         return array;
     }
 
+    static Tensor<T> empty(ShapeType const& size){
+        // empty creates an empty tensor without initialized values
+        Tensor<T> array;
+        array.dimensions = size.size();
+        array.length = Tensor<T>::getLength(size);
+        array.data = std::vector<T>(array.length); // no init value
+        array.shape = size;
+        return array;
+    }
+
     static Tensor<T> arange(ShapeValue count){
-        auto array = Tensor<T>::zeros({count});
+        auto array = Tensor<T>::empty({count});
         for(unsigned int i = 0; i < count; ++i){
             array.data[i] = i;
         }
@@ -232,7 +314,7 @@ public:
 
     static Tensor<T> linspace(double begin, double end, unsigned int steps){
         // initialize empty array
-        auto array = Tensor<T>::zeros({steps});
+        auto array = Tensor<T>::empty({steps});
         // calculate step size and iterate
         double stepSize = (end - begin) / (steps - 1);
         for(unsigned int i = 0; i < steps; ++i){
@@ -243,6 +325,24 @@ public:
 
 
 private:
+
+    /** =================================
+     *           EXCEPTION MANAGEMENT
+     *  =================================*/
+
+    static void checkLenght(ShapeValue lengthA, ShapeValue lengthB){
+        if(lengthA != lengthB){
+            throw std::invalid_argument("Unable to reshape from length " + std::to_string(lengthA) +
+                                        " to " + std::to_string(lengthB));
+        }
+    }
+
+    static void checkShape(ShapeType const& a, ShapeType const& b){
+        if(a.size() != b.size()) throw std::invalid_argument("Tensor shapes do not match");
+        for(unsigned int i = 0; i < a.size(); ++i){
+            if(a[i] != b[i]) throw std::invalid_argument("Tensor shapes do not match");
+        }
+    }
 
 
     static ShapeValue getLength(ShapeType const& size){
