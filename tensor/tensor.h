@@ -22,6 +22,33 @@ class Tensor{
 public:
 
 
+    /** =================================
+     *               CONSTRUCTORS
+     *  =================================*/
+
+    Tensor<T>() = default;
+
+    Tensor<T>(std::vector<T> const& values){
+        data = values;
+        dimensions = 1;
+        shape = {ShapeValue(values.size())};
+        length = values.size();
+    }
+
+
+    Tensor<T>& reshape(ShapeType const& size){
+        Tensor<T>::checkLenght(length, Tensor<T>::getLength(size));
+        // with a tensor reshape, the length stays the same
+        dimensions = size.size();
+        shape = size;
+        return *this;
+    }
+
+
+    /** =================================
+     *               DISPLAY
+     *  =================================*/
+
     void print() const{
         std::cout << "Tensor of shape (";
         for(unsigned int i = 0; i < dimensions - 1; ++i){
@@ -33,13 +60,7 @@ public:
         std::cout << std::endl; // last endline
     }
 
-    Tensor<T>& reshape(ShapeType const& size){
-        Tensor<T>::checkLenght(length, Tensor<T>::getLength(size));
-        // with a tensor reshape, the length stays the same
-        dimensions = size.size();
-        shape = size;
-        return *this;
-    }
+
 
     void printDimension(unsigned int dim, unsigned int& dataIndex) const{
         std::cout << '[';
@@ -159,6 +180,7 @@ public:
                 size.push_back(shape[i]);
             }
         }
+        // create a tensor with new shape 
         auto arguments = Tensor<IndexType>::empty(size);
 
 
