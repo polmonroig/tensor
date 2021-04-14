@@ -236,6 +236,22 @@ public:
         return sum() / length;
     }
 
+    T std() const{
+        return std::sqrt(var());
+    }
+
+    T var() const{
+        T avg = mean();
+        T count = 0;
+        for(T const& val : data){
+            T tmp = val  - avg;
+            count += tmp * tmp;
+        }
+
+        return count / (length - 1); 
+
+    }
+
     Tensor<T> sin() const{
         auto array = Tensor<T>::empty(shape);
         for(unsigned int i = 0; i < length; ++i){
