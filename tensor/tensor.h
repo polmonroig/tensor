@@ -33,6 +33,7 @@ public:
         dimensions = 1;
         shape = {ShapeValue(values.size())};
         length = values.size();
+        calculateStride();
     }
 
 
@@ -41,8 +42,10 @@ public:
         // with a tensor reshape, the length stays the same
         dimensions = size.size();
         shape = size;
+        calculateStride(); // on a reshape we need to recalculate the stride
         return *this;
     }
+
 
 
     /** =================================
@@ -180,7 +183,7 @@ public:
                 size.push_back(shape[i]);
             }
         }
-        // create a tensor with new shape 
+        // create a tensor with new shape
         auto arguments = Tensor<IndexType>::empty(size);
 
 
@@ -293,6 +296,7 @@ public:
         array.dimensions = size.size();
         array.shape = size;
         array.data = values;
+        array.calculateStride();
         return array;
 
     }
@@ -313,6 +317,7 @@ public:
         array.dimensions = size.size();
         array.data = std::vector<T>(array.length, value);
         array.shape = size;
+        array.calculateStride();
         return array;
     }
 
@@ -323,6 +328,7 @@ public:
         array.length = Tensor<T>::getLength(size);
         array.data = std::vector<T>(array.length); // no init value
         array.shape = size;
+        array.calculateStride();
         return array;
     }
 
@@ -376,12 +382,30 @@ private:
     }
 
     /** =================================
+     *               OTHER FUNCTIONS
+     *  =================================*/
+
+     // TODO: the stride recalculation is performed too many times,
+     //       make sure to minimize the call to this function.
+     void calculateStride(){
+        // initilialize all strides to 1
+        stride = ShapeType(dimensions, 1);
+        // skip last dimension because there is no stride
+        // => mult = 1
+        for(int i = dimensions - 2; i >= 0; --i){
+            stride[i] = stride[i + 1] * shape[i + 1];
+        }
+
+     }
+
+    /** =================================
      *               ATTRIBUTES
      *  =================================*/
 
     ShapeValue length; // represents the total number of elements
     ShapeValue dimensions; // number of dimensions in the shape
     ShapeType shape; // dimensions on the tensor
+    ShapeType stride; // represents the stride for each dimension
     std::vector<T> data; // contains the data
 
 };
